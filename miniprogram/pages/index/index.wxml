@@ -1,0 +1,26 @@
+<!-- index.wxml -->
+<view class="container">
+  <view class="title">跳舞的蛇</view>
+  
+  <view class="score-container">
+    <text class="score-text">最高分: {{highScore}}</text>
+  </view>
+  
+  <view class="btn-container">
+    <button class="start-btn" bindtap="startGame">开始游戏</button>
+    <button class="rule-btn" bindtap="showRules">游戏规则</button>
+  </view>
+  
+  <view class="rules-modal" wx:if="{{showRulesModal}}">
+    <view class="rules-content">
+      <view class="rules-title">游戏规则</view>
+      <view class="rules-text">
+        <text>1. 蛇会自动向上移动，点击屏幕左右两侧控制蛇的左右移动</text>
+        <text>2. 收集与蛇颜色相同的色块可获得积分</text>
+        <text>3. 碰到与蛇颜色不同的色块或障碍物游戏结束</text>
+        <text>4. 通过颜色转换区域时，蛇的颜色会随机变化</text>
+      </view>
+      <button class="close-btn" bindtap="hideRules">关闭</button>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,46 @@
+<!-- game.wxml -->
+<view class="game-container">
+  <!-- 顶部信息栏 -->
+  <view class="info-bar">
+    <view class="score">积分: {{score}}</view>
+    <view class="color-indicator" style="background-color: {{snakeColor}}"></view>
+  </view>
+  
+  <!-- 游戏画布 -->
+  <canvas class="game-canvas" canvas-id="gameCanvas" bindtouchstart="handleTouchStart"></canvas>
+  
+  <!-- 操作区域 -->
+  <view class="control-area">
+    <view class="left-control" bindtouchstart="moveLeft"></view>
+    <view class="right-control" bindtouchstart="moveRight"></view>
+  </view>
+  
+  <!-- 游戏结束弹窗 -->
+  <view class="game-over-modal" wx:if="{{gameOver}}">
+    <view class="modal-content">
+      <view class="modal-title">游戏结束</view>
+      <view class="final-score">最终积分: {{score}}</view>
+      <view class="high-score" wx:if="{{isNewHighScore}}">新的最高分！</view>
+      <view class="btn-group">
+        <button class="restart-btn" bindtap="restartGame">重新开始</button>
+        <button class="home-btn" bindtap="goToHome">返回主页</button>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 暂停按钮 -->
+  <view class="pause-btn" bindtap="togglePause" wx:if="{{!gameOver}}">
+    <text>{{isPaused ? '继续' : '暂停'}}</text>
+  </view>
+  
+  <!-- 暂停菜单 -->
+  <view class="pause-menu" wx:if="{{isPaused && !gameOver}}">
+    <view class="menu-content">
+      <view class="menu-title">游戏暂停</view>
+      <view class="btn-group">
+        <button class="resume-btn" bindtap="togglePause">继续游戏</button>
+        <button class="home-btn" bindtap="goToHome">返回主页</button>
+      </view>
+    </view>
+  </view>
+</view>
