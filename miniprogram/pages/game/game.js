@@ -12,11 +12,11 @@ Page({
     snake: null,
     blocks: [],
     colorChangeZones: [],
-    availableColors: ['#00ff00', '#ff0000', '#0000ff', '#ffff00', '#ff00ff'],
+    availableColors: ['#00ff00', '#0000ff', '#ff0000', '#ffff00', '#ff00ff'],
     colorMapping: {
       '#00ff00': 'green',
-      '#ff0000': 'red',
       '#0000ff': 'blue',
+      '#ff0000': 'red',
       '#ffff00': 'yellow',
       '#ff00ff': 'purple'
     },
@@ -168,11 +168,12 @@ Page({
       return;
     }
     
-    // 获取触摸点的X坐标
+    // 获取触摸点的X坐标和蛇的当前位置
     const touchX = e.touches[0].clientX;
-    
-    // 判断触摸点在屏幕的左侧还是右侧
-    if (touchX < this.data.canvasWidth / 2) {
+    const snakeX = this.data.snake.x;
+
+    // 根据蛇的位置判断左右
+    if (touchX < snakeX) {
       this.moveLeft();
     } else {
       this.moveRight();
@@ -185,11 +186,12 @@ Page({
       return;
     }
     
-    // 获取触摸点的X坐标
+    // 获取触摸点的X坐标和蛇的实时位置
     const touchX = e.touches[0].clientX;
-    
-    // 判断触摸点在屏幕的左侧还是右侧
-    if (touchX < this.data.canvasWidth / 2) {
+    const snakeX = this.data.snake.x;
+
+    // 根据蛇的实时位置判断左右
+    if (touchX < snakeX) {
       this.moveLeft();
     } else {
       this.moveRight();
@@ -259,11 +261,15 @@ Page({
       isTouching: true
     });
 
+    // 立即触发第一次操作
+    this.handleMove(this.data.currentDirection);
+    
+    // 缩短间隔时间到50ms实现高频触发
     this.data.touchTimer = setInterval(() => {
       if (this.data.isTouching) {
         this.handleMove(this.data.currentDirection);
       }
-    }, 100);
+    }, 50); // 从100ms调整为50ms
   },
 
   onTouchMove(e) {
@@ -273,14 +279,17 @@ Page({
     const deltaX = touch.clientX - this.data.touchStartX;
     const deltaY = touch.clientY - this.data.touchStartY;
 
-    if (Math.abs(deltaX) > Math.abs(deltaY)) {
-      this.setData({
-        currentDirection: deltaX > 0 ? 'right' : 'left'
-      });
-    } else {
-      this.setData({
-        currentDirection: deltaY > 0 ? 'down' : 'up'
-      });
+    // 实时更新方向判断阈值
+    if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+      if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        this.setData({
+          currentDirection: deltaX > 0 ? 'right' : 'left'
+        });
+      } else {
+        this.setData({
+          currentDirection: deltaY > 0 ? 'down' : 'up'
+        });
+      }
     }
   },
 
@@ -463,9 +472,12 @@ Page({
     if (this.data.colorChangeZones.length >= 1) return null;
 
     // 从可用颜色中选择与当前不同的颜色
-    let newColor = this.data.availableColors.find(
-      color => color !== this.data.snakeColor
-    );
+    const colorIndex = Math.floor(Math.random() * this.data.availableColors.length);
+    let newColor = this.data.availableColors[colorIndex];
+    if (newColor === this.data.snakeColor) {
+      newColor = this.data.availableColors[(colorIndex + 1) % this.data.availableColors.length];
+    }
+
     if (!newColor) newColor = this.data.availableColors[0];
 
     return {
@@ -498,6 +510,7 @@ Page({
         const app = getApp();
         app.playSound('color_change');
         
+        console.log(`蛇与颜色转换区域碰撞，颜色转换为 ${zone.color}`);
         // 直接使用区域颜色更新蛇身颜色
         this.setData({
           snakeColor: zone.color
@@ -582,62 +595,59 @@ Page({
   },
   
   loadImages: function() {
-    // 创建蛇头和蛇身图片对象
-    const snakeHeadImages = {};
-    const snakeBodyImages = {};
-    const blockImages = {};
-    const colors = ['green', 'red', 'blue', 'yellow', 'purple'];
-    const colorValues = this.data.availableColors;
-    
-    console.log('开始加载图片资源，颜色值映射:', colorValues);
-    
-    // 加载所有颜色的蛇头和蛇身图片
-    for (let i = 0; i < colors.length; i++) {
-      const color = colors[i];
-      const colorValue = colorValues[i];
+      // 创建蛇头和蛇身图片对象
+      const snakeHeadImages = {};
+      const snakeBodyImages = {};
+      const blockImages = {};
+      // 从colorMapping获取颜色映射关系
+      const colorEntries = Object.entries(this.data.colorMapping);
       
-      console.log(`加载颜色 ${color} 对应的值 ${colorValue}`);
+      console.log('开始加载图片资源，颜色映射:', colorEntries);
       
-      // 创建蛇头图片对象
-      const snakeHeadImg = this.canvas.createImage();
-      snakeHeadImg.onload = () => {
-        console.log(`Snake head image ${color} loaded`);
-      };
-      snakeHeadImg.onerror = (err) => {
-        console.error(`Failed to load snake head image ${color}:`, err);
-      };
-      snakeHeadImg.src = `../../images/snake_head_${color}.svg`;
-      snakeHeadImages[colorValue] = snakeHeadImg;
+      // 加载所有颜色的蛇头和蛇身图片
+      for (const [colorValue, colorName] of colorEntries) {
+        console.log(`加载颜色 ${colorName} 对应的值 ${colorValue}`);
+        
+        // 创建蛇头图片对象
+        const snakeHeadImg = this.canvas.createImage();
+        snakeHeadImg.onload = () => {
+          console.log(`Snake head image ${colorName} loaded`);
+        };
+        snakeHeadImg.onerror = (err) => {
+          console.error(`Failed to load snake head image ${colorName}:`, err);
+        };
+        snakeHeadImg.src = `../../images/snake_head_${colorName}.svg`;
+        snakeHeadImages[colorValue] = snakeHeadImg;
+        
+        // 创建蛇身图片对象
+        const snakeBodyImg = this.canvas.createImage();
+        snakeBodyImg.onload = () => {
+          console.log(`Snake body image ${colorName} loaded`);
+        };
+        snakeBodyImg.onerror = (err) => {
+          console.error(`Failed to load snake body image ${colorName}:`, err);
+        };
+        snakeBodyImg.src = `../../images/snake_body_${colorName}.svg`;
+        snakeBodyImages[colorValue] = snakeBodyImg;
+        
+        // 创建色块图片对象
+        const blockImg = this.canvas.createImage();
+        blockImg.onload = () => {
+          console.log(`Block image ${colorName} loaded for color value ${colorValue}`);
+        };
+        blockImg.onerror = (err) => {
+          console.error(`Failed to load block image ${colorName} for color value ${colorValue}:`, err);
+        };
+        blockImg.src = `../../images/block_${colorName}.svg`;
+        blockImages[colorValue] = blockImg;
+      }
       
-      // 创建蛇身图片对象
-      const snakeBodyImg = this.canvas.createImage();
-      snakeBodyImg.onload = () => {
-        console.log(`Snake body image ${color} loaded`);
-      };
-      snakeBodyImg.onerror = (err) => {
-        console.error(`Failed to load snake body image ${color}:`, err);
-      };
-      snakeBodyImg.src = `../../images/snake_body_${color}.svg`;
-      snakeBodyImages[colorValue] = snakeBodyImg;
+      console.log('图片资源加载完成，blockImages:', Object.keys(blockImages));
       
-      // 创建色块图片对象
-      const blockImg = this.canvas.createImage();
-      blockImg.onload = () => {
-        console.log(`Block image ${color} loaded for color value ${colorValue}`);
-      };
-      blockImg.onerror = (err) => {
-        console.error(`Failed to load block image ${color} for color value ${colorValue}:`, err);
-      };
-      blockImg.src = `../../images/block_${color}.svg`;
-      blockImages[colorValue] = blockImg;
-    }
-    
-    console.log('图片资源加载完成，blockImages:', Object.keys(blockImages));
-    
-    this.snakeHeadImages = snakeHeadImages;
-    this.snakeBodyImages = snakeBodyImages;
-    this.blockImages = blockImages;
-  },
+      this.snakeHeadImages = snakeHeadImages;
+      this.snakeBodyImages = snakeBodyImages;
+      this.blockImages = blockImages;
+    },
   
   renderGame: function() {
     if (!this.ctx) {
