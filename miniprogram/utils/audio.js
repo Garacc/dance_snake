@@ -17,17 +17,17 @@ const audioManager = {
     // 初始化背景音乐
     this.bgm = wx.createInnerAudioContext();
     this.bgm.loop = true;
-    this.bgm.src = '/miniprogram/audio/bgm.mp3';
+    this.bgm.src = 'audio/bgm.mp3';
     
     // 初始化音效
     this.soundEffects.collect = wx.createInnerAudioContext();
-    this.soundEffects.collect.src = '/miniprogram/audio/collect.mp3';
+    this.soundEffects.collect.src = 'audio/collect.mp3';
     
     this.soundEffects.obstacle = wx.createInnerAudioContext();
-    this.soundEffects.obstacle.src = '/miniprogram/audio/obstacle.mp3';
+    this.soundEffects.obstacle.src = 'audio/obstacle.mp3';
     
     this.soundEffects.colorChange = wx.createInnerAudioContext();
-    this.soundEffects.colorChange.src = '/miniprogram/audio/color_change.mp3';
+    this.soundEffects.colorChange.src = 'audio/color_change.mp3';
   },
   
   // 播放背景音乐

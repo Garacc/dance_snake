@@ -1,7 +1,8 @@
 {
   "description": "项目配置文件",
   "packOptions": {
-    "ignore": []
+    "ignore": [],
+    "include": []
   },
   "miniprogramRoot": "miniprogram/",
   "compileType": "miniprogram",
@@ -43,7 +44,12 @@
     "showES6CompileOption": false,
     "useCompilerPlugins": false
   },
-  "appid": "touristappid",
+  "appid": "wx2867e08058c4833c",
   "libVersion": "2.30.2",
-  "condition": {}
+  "condition": {},
+  "srcMiniprogramRoot": "miniprogram/",
+  "editorSetting": {
+    "tabIndent": "insertSpaces",
+    "tabSize": 2
+  }
 }

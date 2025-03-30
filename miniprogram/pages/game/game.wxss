@@ -4,7 +4,7 @@
   width: 100%;
   height: 100vh;
   background-color: #000000;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* 顶部信息栏 */
@@ -60,25 +60,73 @@
 }
 
 /* 游戏结束弹窗 */
+/* 新增弹窗层级控制 */
 .game-over-modal {
   position: fixed;
   top: 0;
   left: 0;
+  z-index: 9999; /* 确保弹窗在canvas之上 */
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
+  background: rgba(0,0,0,0.7);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 100;
 }
 
+/* 确保canvas的层级在普通元素层 */
+.game-canvas {
+  position: relative;
+  z-index: 1;
+}
+
+/* 添加弹窗内容样式 */
 .modal-content {
-  width: 80%;
-  background-color: #222222;
-  border-radius: 20rpx;
+  background: white;
   padding: 40rpx;
-  box-shadow: 0 0 20rpx rgba(0, 255, 0, 0.5);
+  border-radius: 20rpx;
+  text-align: center;
+}
+
+.modal-title {
+  font-size: 48rpx;
+  color: #fff;
+  margin-bottom: 30rpx;
+}
+
+.final-score {
+  font-size: 36rpx;
+  color: #fff;
+  margin-bottom: 20rpx;
+}
+
+.high-score-tip {
+  color: #ffcc00;
+  font-size: 32rpx;
+  margin-bottom: 40rpx;
+}
+
+.btn-group {
+  display: flex;
+  justify-content: space-around;
+}
+
+.restart-btn, .home-btn {
+  width: 45%;
+  height: 80rpx;
+  line-height: 80rpx;
+  border-radius: 40rpx;
+  font-size: 32rpx;
+}
+
+.restart-btn {
+  background-color: #00cc66;
+  color: white;
+}
+
+.home-btn {
+  background-color: #666;
+  color: white;
 }
 
 .modal-title {
@@ -108,6 +156,7 @@
   display: flex;
   flex-direction: column;
   gap: 20rpx;
+  margin-top: 30rpx;
 }
 
 .restart-btn, .home-btn, .resume-btn {
@@ -118,6 +167,7 @@
   border-radius: 40rpx;
   font-size: 32rpx;
   font-weight: bold;
+  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.3);
 }
 
 .restart-btn, .resume-btn {
@@ -178,4 +228,21 @@
   text-align: center;
   margin-bottom: 40rpx;
   color: #00ff00;
+}
+
+/* 新增得分样式 */
+.modal-content .final-score {
+  color: #333333; /* 深灰色确保可读性 */
+  font-size: 48rpx;
+  font-weight: bold;
+  margin: 20rpx 0;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.1); /* 添加文本阴影增强对比 */
+}
+
+/* 确保弹窗背景与文本对比度 */
+.modal-content {
+  background: #ffffff !important;
+  padding: 40rpx;
+  border-radius: 20rpx;
+  text-align: center;
 }
