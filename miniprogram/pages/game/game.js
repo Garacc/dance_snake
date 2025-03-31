@@ -20,8 +20,11 @@ Page({
       '#ffff00': 'yellow',
       '#ff00ff': 'purple'
     },
+    gameLevel: 0,
     gameSpeed: 4, // 增加初始游戏速度，让游戏更有前进感
+    defaultGameSpeed: 4, // 初始游戏速度
     blockGenerationRate: 0.03, // 降低色块生成概率，减少障碍物
+    defaultBlockGenerationRate: 0.03, // 初始色块生成概率
     colorChangeRate: 0.01, // 提高颜色转换区域生成概率
     lastFrameTime: 0,
     animationFrameId: null,
@@ -34,6 +37,7 @@ Page({
     touchTimer: null, // 触摸计时器
     isTouching: false, // 新增触摸状态
     currentDirection: null, // 新增当前方向状态
+    difficultyNotifications: [] // 新增难度提示数组
   },
 
   onLoad: function() {
@@ -104,7 +108,11 @@ Page({
       snakeColor: this.data.availableColors[0],
       lastFrameTime: Date.now(),
       snakePositions: snakePositions,
-      backgroundLines: backgroundLines
+      backgroundLines: backgroundLines,
+      gameLevel: 0,
+      gameSpeed: 4,
+      blockGenerationRate: 0.03,
+      difficultyNotifications: []
     });
 
     console.log('初始化游戏状态完成，开始获取Canvas节点');
@@ -168,6 +176,11 @@ Page({
       return;
     }
     
+    // 添加对snake对象的空值检查
+    if (!this.data.snake) {
+      return;
+    }
+    
     // 获取触摸点的X坐标和蛇的当前位置
     const touchX = e.touches[0].clientX;
     const snakeX = this.data.snake.x;
@@ -183,6 +196,11 @@ Page({
   handleTouchMove: function(e) {
     // 如果游戏结束或暂停，不处理触摸事件
     if (this.data.gameOver || this.data.isPaused) {
+      return;
+    }
+    
+    // 添加对snake对象的空值检查
+    if (!this.data.snake) {
       return;
     }
     
@@ -253,6 +271,9 @@ Page({
   // 在Page对象中添加触摸事件处理方法
   onTouchStart(e) {
     if (this.data.gameOver || this.data.isPaused) return;
+
+    // 添加对snake对象的空值检查
+    if (!this.data.snake) return;
 
     const touch = e.touches[0];
     this.setData({
@@ -327,12 +348,23 @@ Page({
   updateGame: function(deltaTime) {
     // 如果游戏未开始、已结束或暂停，不再更新游戏状态
     if (!this.data.gameStarted || this.data.gameOver || this.data.isPaused) {
-      // 确保在游戏结束状态下不执行任何更新
       return;
     }
     
+    // 新增难度调整调用
+    this.adjustDifficulty();
+
+    const updatedNotifications = this.data.difficultyNotifications.map(notification => {
+      return {
+        ...notification,
+        x: notification.x - notification.speed
+      };
+    }).filter(notification => notification.x > -200); // 移出屏幕后移除
+
+    this.setData({ difficultyNotifications: updatedNotifications });
+    
     // 更新蛇的位置（只有水平移动，垂直方向保持静止）
-    const snake = this.data.snake;
+    const  snake = this.data.snake;
     snake.x += snake.speedX;
     
     // 更新背景线条位置
@@ -370,7 +402,7 @@ Page({
     
     // 更新色块位置（向下移动）
     const blocks = this.data.blocks.map(block => {
-      block.y += this.data.gameSpeed;
+      block.y += this.data.gameSpeed; // 确保这里使用调整后的速度
       return block;
     });
     
@@ -379,7 +411,7 @@ Page({
     
     // 更新颜色转换区域位置（向下移动）
     const colorChangeZones = this.data.colorChangeZones.map(zone => {
-      zone.y += this.data.gameSpeed;
+      zone.y += this.data.gameSpeed; // 确保这里使用调整后的速度
       return zone;
     });
     
@@ -581,16 +613,49 @@ Page({
   adjustDifficulty: function() {
     // 根据分数调整游戏难度
     const score = Math.floor(this.data.score);
+    const scoreStep = 500;
+
+    const previousLevel = this.data.gameLevel;
+    const currentLevel = Math.floor(score / scoreStep);
     
+    // 只有当等级发生变化时才显示提示
+    if (currentLevel > previousLevel) {
+      // 计算等级提升的差值
+      const levelDifference = currentLevel - previousLevel;
+      let notificationText = '';
+      
+      // 根据等级差值生成不同的提示文本
+      if (levelDifference === 1) {
+        notificationText = `难度提升至 Lv.${currentLevel + 1}`;
+      } else {
+        notificationText = `难度一次性提升${levelDifference}级，当前等级 Lv.${currentLevel + 1}`;
+      }
+      
+      // 创建新的通知对象
+      const newNotification = {
+        text: notificationText,
+        x: this.data.canvasWidth, // 初始位置在右侧
+        y: 100,
+        color: '#FFD700',
+        speed: 3
+      };
+      
+      // 限制difficultyNotifications数组最大长度为1
+      this.setData({
+        difficultyNotifications: [newNotification], // 只保留最新的一条通知
+        gameLevel: currentLevel
+      });
+      console.log(`游戏速度调整为 ${this.data.gameSpeed}, 色块生成率调整为 ${this.data.blockGenerationRate}`);
+    }
+
     // 每500分增加游戏速度和色块生成率
-    const speedMultiplier = 1 + Math.floor(score / 500) * 0.1;
-    const blockRateMultiplier = 1 + Math.floor(score / 500) * 0.2;
+    const speedMultiplier = 1 + currentLevel * 0.05;
+    const blockRateMultiplier = 1 + currentLevel * 0.05;
     
     // 更新游戏速度和色块生成率
     this.setData({
-      gameSpeed: 4 * speedMultiplier,
-      blockGenerationRate: 0.15 * blockRateMultiplier,
-      colorChangeRate: 0.1 * (1 + Math.floor(score / 1000) * 0.1)
+      gameSpeed: this.data.defaultGameSpeed * speedMultiplier,
+      blockGenerationRate: this.data.defaultBlockGenerationRate * blockRateMultiplier
     });
   },
   
@@ -798,7 +863,28 @@ Page({
       this.ctx.lineWidth = zone.borderWidth;
       this.ctx.strokeRect(zone.x, zone.y, zone.width, zone.height);
     });
-    
+
+    // 绘制难度提示（新增部分）
+    if (this.data.difficultyNotifications && this.data.difficultyNotifications.length > 0) {
+      // 先设置文字阴影
+      this.ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      this.ctx.shadowBlur = 4;
+      this.ctx.shadowOffsetX = 2;
+      this.ctx.shadowOffsetY = 2;
+      
+      this.data.difficultyNotifications.forEach(notification => {
+        this.ctx.fillStyle = notification.color;
+        this.ctx.font = 'bold 24px Arial';
+        this.ctx.textAlign = 'left';
+        this.ctx.fillText(notification.text, notification.x, notification.y);
+      });
+      
+      // 绘制完成后重置阴影属性
+      this.ctx.shadowColor = 'transparent';
+      this.ctx.shadowBlur = 0;
+      this.ctx.shadowOffsetX = 0;
+      this.ctx.shadowOffsetY = 0;
+    }
     // 不需要更新颜色指示器，因为WXML中没有定义该组件
     // 在controls中直接显示当前颜色
     // 注意：这里不再使用selectComponent，避免因组件不存在而导致错误
@@ -910,6 +996,16 @@ Page({
   },
   
   goToHome: function() {
-    wx.navigateBack();
+    // 使用redirectTo确保能返回首页，即使navigateBack失败
+    wx.redirectTo({
+      url: '/pages/index/index',
+      fail: function(err) {
+        console.error('返回首页失败:', err);
+        // 如果redirectTo失败，尝试使用switchTab或reLaunch
+        wx.reLaunch({
+          url: '/pages/index/index'
+        });
+      }
+    });
   }
 });
